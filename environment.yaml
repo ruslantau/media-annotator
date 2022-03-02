@@ -1,0 +1,41 @@
+name: annotator
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - anyio=3.5.0=py37hf985489_0
+  - asgiref=3.5.0=pyhd8ed1ab_0
+  - ca-certificates=2021.10.26=hecd8cb5_2
+  - certifi=2021.10.8=py37hecd8cb5_2
+  - click=8.0.4=py37hf985489_0
+  - fastapi=0.70.1=pyhd8ed1ab_0
+  - h11=0.12.0=pyhd8ed1ab_0
+  - idna=3.3=pyhd8ed1ab_0
+  - importlib-metadata=4.11.1=py37hf985489_0
+  - libcxx=12.0.0=h2f01273_0
+  - libffi=3.4.2=h0d85af4_5
+  - libzlib=1.2.11=h9173be1_1013
+  - ncurses=6.3=hca72f7f_2
+  - openssl=3.0.0=h0d85af4_2
+  - pip=21.2.2=py37hecd8cb5_0
+  - pydantic=1.9.0=py37h271585c_0
+  - python=3.7.12=hf3644f1_100_cpython
+  - python_abi=3.7=2_cp37m
+  - readline=8.1.2=hca72f7f_1
+  - setuptools=58.0.4=py37hecd8cb5_0
+  - sniffio=1.2.0=py37hf985489_2
+  - sqlite=3.37.2=h707629a_0
+  - starlette=0.16.0=pyhd8ed1ab_0
+  - tk=8.6.11=h7bc2e8c_0
+  - typing-extensions=4.1.1=hd8ed1ab_0
+  - typing_extensions=4.1.1=pyha770c72_0
+  - uvicorn=0.17.5=py37hf985489_0
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.5=h1de35cc_0
+  - zipp=3.7.0=pyhd8ed1ab_1
+  - zlib=1.2.11=h9173be1_1013
+  - pip:
+    - cffi==1.15.0
+    - pycparser==2.21
+    - vosk==0.3.32
+prefix: /Users/ruslantau/miniconda3/envs/annotator
