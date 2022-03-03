@@ -10,11 +10,14 @@
         <a-menu
           theme="dark"
           mode="horizontal"
-          :default-selected-keys="['2']"
+          :selected-keys="[$nuxt.$route.name]"
           :style="{ lineHeight: '64px' }"
         >
-          <a-menu-item key="1">
-            Projects
+          <a-menu-item key="index">
+            <nuxt-link :to="{ name: 'index'}" />Main
+          </a-menu-item>
+          <a-menu-item key="projects">
+            <nuxt-link :to="{ name: 'projects'}" />Projects
           </a-menu-item>
         </a-menu>
       </a-row>

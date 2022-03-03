@@ -1,5 +1,5 @@
 <template>
-  <Tutorial />
+  <media-viewer />
 </template>
 
 <script>

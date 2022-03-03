@@ -5,6 +5,9 @@
       <client-only>
         <vue-wave-surfer ref="surf" :src="file" :options="options" />
         <a-row type="flex" justify="center" style="position: absolute; width: 100%; left:0; bottom: -15px;">
+          <a-space size="small" style="position: absolute; left: 0px;">
+            <models-tree-select />
+          </a-space>
           <a-space size="small">
             <a-popover>
               <div slot="content" style="height: 90px">
@@ -40,7 +43,16 @@
             </a-popover>
           </a-space>
           <a-space size="small" style="position: absolute; right: 0px;">
-            <a-button icon="coffee" :loading="isAnnotating">Auto annotation</a-button>
+            <a-button
+              icon="delete"
+              :type="hovered ? 'danger' : 'default'"
+              :loading="isSplitting"
+              @mouseover="hovered = true"
+              @mouseleave="hovered = false"
+              @click="clearRegions"
+            >
+              Delete all
+            </a-button>
             <a-dropdown>
               <a-menu slot="overlay" style="padding: 0;">
                 <a-menu-item key="1">
@@ -53,24 +65,28 @@
                   As TXT
                 </a-menu-item>
               </a-menu>
-              <a-button icon="upload" :loading="isExporting">Export</a-button>
+              <a-button icon="upload" :loading="isExporting">
+                Export
+              </a-button>
             </a-dropdown>
-            <a-button icon="scissor" :loading="isSplitting">Split by regions</a-button>
+            <a-button icon="scissor" :loading="isSplitting">
+              Split by regions
+            </a-button>
             <!--            <a-button icon="edit">Edit</a-button>-->
           </a-space>
         </a-row>
       </client-only>
     </a-card>
     <a-card
-      v-if="currentRegionId !== undefined"
+      v-if="currentRegion.id !== null"
       style="margin-top: 24px"
-      :title="`Annotation for ${~~currentRegion.start}s - ${~~currentRegion.end}s | Region length: ${~~currentRegion.end}`"
+      :title="`Annotation for ${currentRegion.start.toFixed(2)}s - ${currentRegion.end.toFixed(2)}s | Region length: ${currentRegion.duration.toFixed(2)}s`"
     >
-      <a-form-model ref="regionForm" layout="inline" :model="currentRegion" @submit.native.prevent>
+      <a-form-model layout="inline" :model="currentRegion" @submit.native.prevent>
         <a-row type="flex" :gutter="16">
           <a-col flex="auto">
             <a-input
-              v-model.lazy="currentRegion.text"
+              v-model="currentRegion.data.text"
               type="textarea"
               placeholder="Text.."
               @change="saveRegion"
@@ -100,22 +116,28 @@ export default {
   name: 'NuxtTutorial',
   data () {
     return {
+      hovered: false,
       isPlaying: false,
-      isAnnotating: false,
       isExporting: false,
       isSplitting: false,
       file: 'http://localhost:8000/uploads/result_wav.wav',
       zoom: 100,
-      currentRegionId: undefined,
-      currentRegion: {},
+      currentRegion: {
+        id: null,
+        start: null,
+        end: null,
+        duration: null,
+        data: { text: null },
+        color: null
+      },
       options: {
         scrollParent: true,
         regionsMinLength: 1,
+        partialRender: true,
         plugins: [
           Cursor.create(),
           Regions.create({
             regionsMinLength: 2,
-            regions: [],
             dragSelection: {
               slop: 5
             }
@@ -127,20 +149,26 @@ export default {
   computed: {
     player () {
       return this.$refs.surf.waveSurfer
-    },
-    regionForm () {
-      return this.$refs.regionForm
     }
   },
   watch: {
-    currentRegionId (val) {
-      if (val !== undefined) {
-        const currentRegion = this.player.regions.list[val]
-        this.currentRegion.id = currentRegion.id
-        this.currentRegion.start = currentRegion.start
-        this.currentRegion.end = currentRegion.end
-        this.currentRegion.text = currentRegion.text
-      }
+    'currentRegion.id': {
+      handler (val) {
+        if (val !== null) {
+          const currentRegion = this.player.regions.list[val]
+          this.currentRegion.id = currentRegion.id
+          this.currentRegion.start = currentRegion.start
+          this.currentRegion.end = currentRegion.end
+          this.currentRegion.data.text = currentRegion.data.text
+        }
+      },
+      deep: true
+    },
+    'currentRegion.end' () {
+      this.currentRegion.duration = this.currentRegion.end - this.currentRegion.start
+    },
+    'currentRegion.start' () {
+      this.currentRegion.duration = this.currentRegion.end - this.currentRegion.start
     }
   },
   mounted () {
@@ -152,17 +180,22 @@ export default {
         this.player.on('region-click', (region, e) => {
           e.stopPropagation()
           region.play()
-          this.currentRegionId = region.id
+          this.currentRegion.id = region.id
         })
         this.player.on('region-mouseenter', (region, e) => {
-          this.currentRegionId = region.id
+          this.currentRegion.id = region.id
         })
-        this.player.on('region-update-end', (region, e) => {
-          this.currentRegionId = region.id
+        this.player.on('region-updated', (region, e) => {
+          this.currentRegion.id = region.id
           this.currentRegion.start = region.start
           this.currentRegion.end = region.end
-          // eslint-disable-next-line no-console
-          console.log(region, this.currentRegion)
+        })
+        this.$nuxt.$on('update-annotations', (newAnnotations, e) => {
+          // eslint-disable-next-line
+          console.log()
+          newAnnotations.forEach((region) => {
+            this.player.addRegion(region)
+          })
         })
       })
     })
@@ -180,23 +213,22 @@ export default {
     },
     clearRegions () {
       this.player.clearRegions()
+      this.currentRegion.id = null
     },
     saveRegion () {
-      if (![undefined, '', ' ', null].includes(this.currentRegion.text.trim())) {
-        this.player.regions.list[this.currentRegionId].text = this.currentRegion.text
-        this.player.regions.list[this.currentRegionId].color = 'rgba(0, 255, 0, 0.1)'
-        this.player.regions.list[this.currentRegionId].element.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+      if (![undefined, '', ' ', null].includes(this.currentRegion.data.text.trim())) {
+        this.player.regions.list[this.currentRegion.id].data.text = this.currentRegion.data.text
+        this.player.regions.list[this.currentRegion.id].color = 'rgba(0, 255, 0, 0.1)'
+        this.player.regions.list[this.currentRegion.id].element.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
       } else {
-        this.player.regions.list[this.currentRegionId].text = null
-        this.player.regions.list[this.currentRegionId].color = 'rgba(0, 0, 0, 0.1)'
-        this.player.regions.list[this.currentRegionId].element.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
+        this.player.regions.list[this.currentRegion.id].data.text = null
+        this.player.regions.list[this.currentRegion.id].color = 'rgba(0, 0, 0, 0.1)'
+        this.player.regions.list[this.currentRegion.id].element.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
       }
     },
     deleteRegion () {
-      // eslint-disable-next-line no-console
-      console.log(this.currentRegionId)
-      this.player.regions.list[this.currentRegionId].remove()
-      this.currentRegionId = undefined
+      this.player.regions.list[this.currentRegion.id].remove()
+      this.currentRegion.id = null
     }
   }
 }
