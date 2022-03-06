@@ -13,9 +13,6 @@
           :selected-keys="[$nuxt.$route.name]"
           :style="{ lineHeight: '64px' }"
         >
-          <a-menu-item key="index">
-            <nuxt-link :to="{ name: 'index'}" />Main
-          </a-menu-item>
           <a-menu-item key="projects">
             <nuxt-link :to="{ name: 'projects'}" />Projects
           </a-menu-item>
@@ -44,5 +41,8 @@ export default {
   background: rgba(255, 255, 255, 0.2);
   margin: 16px 24px 16px 0;
   float: left;
+}
+body {
+  background-color: #f0f2f5;
 }
 </style>

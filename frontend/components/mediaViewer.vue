@@ -1,9 +1,9 @@
-<!-- Please remove this file from your project -->
 <template>
   <div>
     <a-card title="Audio">
+      <slot slot="extra" name="card-extra" />
       <client-only>
-        <vue-wave-surfer ref="surf" :src="file" :options="options" />
+        <vue-wave-surfer ref="surf" :src="fileUrl" :options="options" />
         <a-row type="flex" justify="center" style="position: absolute; width: 100%; left:0; bottom: -15px;">
           <a-space size="small" style="position: absolute; left: 0px;">
             <models-tree-select />
@@ -114,13 +114,16 @@ import Regions from 'wavesurfer.js/dist/plugin/wavesurfer.regions'
 
 export default {
   name: 'NuxtTutorial',
+  props: {
+    fileUrl: { type: String, default: 'http://localhost:8000/uploads/result_wav.wav' },
+    regions: { type: Array, default: () => [] }
+  },
   data () {
     return {
       hovered: false,
       isPlaying: false,
       isExporting: false,
       isSplitting: false,
-      file: 'http://localhost:8000/uploads/result_wav.wav',
       zoom: 100,
       currentRegion: {
         id: null,
@@ -138,6 +141,7 @@ export default {
           Cursor.create(),
           Regions.create({
             regionsMinLength: 2,
+            regions: [],
             dragSelection: {
               slop: 5
             }
@@ -177,6 +181,12 @@ export default {
         this.player.on('ready', () => {
           this.player.zoom(this.zoom)
         })
+        this.player.on('play', () => {
+          this.isPlaying = true
+        })
+        this.player.on('pause', () => {
+          this.isPlaying = false
+        })
         this.player.on('region-click', (region, e) => {
           e.stopPropagation()
           region.play()
@@ -203,7 +213,6 @@ export default {
   methods: {
     toggle_play () {
       this.player.playPause()
-      this.isPlaying = this.player.isPlaying()
     },
     updateVolumes (value) {
       this.player.setVolume(value)

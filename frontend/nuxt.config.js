@@ -43,5 +43,8 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    extend (config) {
+      config.resolve.alias.vue = 'vue/dist/vue.common'
+    }
   }
 }

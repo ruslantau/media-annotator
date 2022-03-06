@@ -1,5 +1,5 @@
 <template>
-  <div><h1>Projects list</h1></div>
+  <projects-table />
 </template>
 
 <script>

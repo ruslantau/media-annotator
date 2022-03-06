@@ -2,35 +2,37 @@ import json
 import urllib.request
 import wave
 import zipfile
+import shutil
 from pathlib import Path
+from typing import List
 
 import uvicorn
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from vosk import Model, KaldiRecognizer
-from utils import get_models_table
+from utils import get_models_table, ProjectManager
 
 BASE_DIR = Path(__file__).parent.absolute()
 DATA_DIR = BASE_DIR.parent / 'data'
-UPLOADS_DIR = DATA_DIR / "uploads"
-PROJECTS_DIR = DATA_DIR / "projects"
 MODELS_DIR = DATA_DIR / "models"
+UPLOADS_DIR = DATA_DIR / "uploads"
 
-for path in [UPLOADS_DIR, PROJECTS_DIR, MODELS_DIR]:
+for path in [UPLOADS_DIR, MODELS_DIR]:
     path.mkdir(exist_ok=True, parents=True)
 
 app = FastAPI()
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
     allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"]
 )
+project_manager = ProjectManager(DATA_DIR / 'projects.json')
 
 
 @app.get("/")
@@ -41,17 +43,21 @@ async def get_all_urls():
 
 @app.get("/projects")
 @app.get("/projects/{id}")
-async def projects(id: int = None):
-    if (PROJECTS_DIR / 'projects.json').exists():
-        with open(PROJECTS_DIR / 'projects.json', mode='r', encoding='utf-8') as f:
-            projects = f.read()
-    else:
-        projects = []
-
+async def projects(id: str = None) -> JSONResponse:
+    project_manager.read()
     if id is None:
-        return projects
+        return JSONResponse(content=list(project_manager.projects_dict.values()))
     else:
-        return projects
+        return JSONResponse(content=project_manager.projects_dict[id])
+
+
+@app.delete("/projects/{id}")
+async def projects(id: int = None) -> JSONResponse:
+    project_manager.read()
+    project_manager.remove_project(id)
+    project_uploads_dir = UPLOADS_DIR / str(id)
+    shutil.rmtree(project_uploads_dir)
+    return JSONResponse(content='Project successfully removed.', status_code=200)
 
 
 @app.get("/annotate")
@@ -141,5 +147,40 @@ def get_uploaded_file(filepath: str):
     return FileResponse(path)
 
 
+@app.post("/uploads")
+async def upload_files(files: List[UploadFile] = File(...), metadata: str = Form(...)):
+    new_id = project_manager.max_project_id + 1
+    project = dict(id=new_id,
+                   name=f"Project {new_id}",
+                   data=[])
+
+    metadata = json.loads(metadata)
+    project_uploads_dir = UPLOADS_DIR / str(new_id)
+    for i, file in enumerate(files):
+        contents = await file.read()
+        file_path = project_uploads_dir / metadata['paths'][i]
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        with open(file_path, 'wb') as f:
+            f.write(contents)
+        project['data'].append({'file_path': file_path.as_posix(),
+                                'annotations': [],
+                                'file_url': metadata['paths'][i]
+                                })
+
+    try:
+        project_manager.add_project(project)
+    except Exception as e:
+        project_manager.remove_project(new_id)
+        shutil.rmtree(project_uploads_dir)
+        raise HTTPException(status_code=500, detail=f"Project creating failed. \nERROR: {e}")
+
+    return project
+
+
 if __name__ == "__main__":
-    uvicorn.run("__main__:app", host="localhost", port=8000, reload=True, workers=2)
+    uvicorn.run("__main__:app",
+                host="localhost",
+                port=8000,
+                # reload=True,
+                # workers=2
+                )
