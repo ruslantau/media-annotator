@@ -5,8 +5,8 @@
       <client-only>
         <vue-wave-surfer ref="surf" :src="fileUrl" :options="options" />
         <a-row type="flex" justify="center" style="position: absolute; width: 100%; left:0; bottom: -15px;">
-          <a-space size="small" style="position: absolute; left: 0px;">
-            <models-tree-select />
+          <a-space size="small" style="position: absolute; left: 13px;">
+            <models-tree-select :input-file-name="inputFileName" />
           </a-space>
           <a-space size="small">
             <a-popover>
@@ -42,7 +42,7 @@
               <a-button shape="circle" icon="zoom-in" />
             </a-popover>
           </a-space>
-          <a-space size="small" style="position: absolute; right: 0px;">
+          <a-space size="small" style="position: absolute; right: 13px;">
             <a-button
               icon="delete"
               :type="hovered ? 'danger' : 'default'"
@@ -55,15 +55,12 @@
             </a-button>
             <a-dropdown>
               <a-menu slot="overlay" style="padding: 0;">
-                <a-menu-item key="1">
+                <a-menu-item key="1" @click="downloadAnnotations('json')">
                   As JSON
                 </a-menu-item>
-                <a-menu-item key="2">
-                  As CSV
-                </a-menu-item>
-                <a-menu-item key="3">
-                  As TXT
-                </a-menu-item>
+                <!-- <a-menu-item key="2" @click="downloadAnnotations('csv')">-->
+                <!--   As CSV-->
+                <!-- </a-menu-item>-->
               </a-menu>
               <a-button icon="upload" :loading="isExporting">
                 Export
@@ -113,9 +110,10 @@ import Cursor from 'wavesurfer.js/dist/plugin/wavesurfer.cursor'
 import Regions from 'wavesurfer.js/dist/plugin/wavesurfer.regions'
 
 export default {
-  name: 'NuxtTutorial',
+  name: 'MediaViewer',
   props: {
-    fileUrl: { type: String, default: 'http://localhost:8000/uploads/result_wav.wav' },
+    fileUrl: { type: String, default: null },
+    inputFileName: { type: String, default: null },
     regions: { type: Array, default: () => [] }
   },
   data () {
@@ -141,7 +139,7 @@ export default {
           Cursor.create(),
           Regions.create({
             regionsMinLength: 2,
-            regions: [],
+            regions: this.regions,
             dragSelection: {
               slop: 5
             }
@@ -164,6 +162,7 @@ export default {
           this.currentRegion.start = currentRegion.start
           this.currentRegion.end = currentRegion.end
           this.currentRegion.data.text = currentRegion.data.text
+          this.currentRegion.color = currentRegion.color
         }
       },
       deep: true
@@ -173,6 +172,16 @@ export default {
     },
     'currentRegion.start' () {
       this.currentRegion.duration = this.currentRegion.end - this.currentRegion.start
+    },
+    fileUrl () {
+      this.currentRegion = {
+        id: null,
+        start: null,
+        end: null,
+        duration: null,
+        data: { text: null },
+        color: null
+      }
     }
   },
   mounted () {
@@ -200,12 +209,8 @@ export default {
           this.currentRegion.start = region.start
           this.currentRegion.end = region.end
         })
-        this.$nuxt.$on('update-annotations', (newAnnotations, e) => {
-          // eslint-disable-next-line
-          console.log()
-          newAnnotations.forEach((region) => {
-            this.player.addRegion(region)
-          })
+        this.player.on('region-update-end', (region, e) => {
+          this.$nuxt.$emit('media-region-updated', region)
         })
       })
     })
@@ -223,21 +228,29 @@ export default {
     clearRegions () {
       this.player.clearRegions()
       this.currentRegion.id = null
+      this.$nuxt.$emit('media-clear-all-regions')
     },
     saveRegion () {
+      this.$nuxt.$emit('media-region-updated', this.currentRegion)
       if (![undefined, '', ' ', null].includes(this.currentRegion.data.text.trim())) {
         this.player.regions.list[this.currentRegion.id].data.text = this.currentRegion.data.text
         this.player.regions.list[this.currentRegion.id].color = 'rgba(0, 255, 0, 0.1)'
         this.player.regions.list[this.currentRegion.id].element.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+        this.currentRegion.color = 'rgba(0, 255, 0, 0.1)'
       } else {
         this.player.regions.list[this.currentRegion.id].data.text = null
         this.player.regions.list[this.currentRegion.id].color = 'rgba(0, 0, 0, 0.1)'
         this.player.regions.list[this.currentRegion.id].element.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
+        this.currentRegion.color = 'rgba(0, 0, 0, 0.1)'
       }
     },
     deleteRegion () {
+      this.$nuxt.$emit('media-remove-region', this.currentRegion.id)
       this.player.regions.list[this.currentRegion.id].remove()
       this.currentRegion.id = null
+    },
+    downloadAnnotations (fileType) {
+      this.$nuxt.$emit('download-all-annotations', fileType)
     }
   }
 }

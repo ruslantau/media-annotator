@@ -1,0 +1,30 @@
+# media-annotator
+Web-based annotation tool for media data.
+Currently, only `.wav` files supported.
+
+![](./img/mediaView.png)
+
+## TODO
+- extend the list of supported formats (`mp3,mp4,flac,avi,etc.`)
+- feature to exporting annotations as `.csv`
+- feature to exporting audio regions as audio files as `archive.zip`
+
+## Installation
+Clone repository, create python environment using conda manager and activate it
+
+    git clone https://github.com/ruslantau/media-annotator
+    cd annotator
+    conda create -f backend/environment.yaml
+    conda activate annotator
+
+Run FastAPI backend
+
+    python backend/main.py
+
+Run Nuxt frontend and open http://localhost:3000/projects
+
+    npm run dev --prefix frontend
+    
+
+
+

@@ -52,20 +52,41 @@ async def projects(id: str = None) -> JSONResponse:
 
 
 @app.delete("/projects/{id}")
-async def projects(id: int = None) -> JSONResponse:
+async def projects(id: str = None) -> JSONResponse:
     project_manager.read()
     project_manager.remove_project(id)
-    project_uploads_dir = UPLOADS_DIR / str(id)
+    project_uploads_dir = UPLOADS_DIR / id
     shutil.rmtree(project_uploads_dir)
     return JSONResponse(content='Project successfully removed.', status_code=200)
 
 
+@app.put("/projects/{id}")
+async def update_annotations(id: str, new_data: Request) -> JSONResponse:
+    data_json = await new_data.json()
+    project_manager.read()
+    project = project_manager.projects_dict[id]
+    project['name'] = data_json['name']
+    project_manager.update_project(project)
+    return JSONResponse(content='Data was updated.', status_code=200)
+
+
+@app.put("/projects/{id}/annotations")
+async def update_annotations(id: str, new_data: Request) -> JSONResponse:
+    data_json = await new_data.json()
+    project_manager.read()
+    project = project_manager.projects_dict[id]
+    project['data'] = data_json
+    project_manager.update_project(project)
+    return JSONResponse(content='Data was updated.', status_code=200)
+
+
 @app.get("/annotate")
-async def annotate(input_file_name: str, model_dir_name: str):
+async def annotate(input_file_path: str, model_dir_name: str):
     model_dir_path = MODELS_DIR / model_dir_name
     model_zip_path = model_dir_path.with_suffix(model_dir_path.suffix + '.zip')
-    input_file_path = UPLOADS_DIR / input_file_name
+    input_file_path = UPLOADS_DIR / input_file_path
 
+    print(input_file_path, model_dir_name)
     if not model_dir_path.exists():
         if not model_zip_path.exists():
             try:
@@ -118,6 +139,7 @@ async def annotate(input_file_name: str, model_dir_name: str):
                                                                                'conf': row['conf']}, axis=1)
     sentences_df = sentences_df.drop(columns=['sentence'])
     sentences_df['color'] = 'rgba(0,255,0,0.1)'
+    sentences_df['id'] = 'region_' + sentences_df.index.astype(str)
     return sentences_df.to_dict(orient='records')
 
 
@@ -181,6 +203,6 @@ if __name__ == "__main__":
     uvicorn.run("__main__:app",
                 host="localhost",
                 port=8000,
-                # reload=True,
-                # workers=2
+                reload=True,
+                workers=2
                 )

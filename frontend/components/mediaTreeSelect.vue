@@ -14,7 +14,7 @@
               <a-icon type="inbox" />
             </p>
             <p class="ant-upload-text">
-              Click or drag directory to this area to select files to upload
+              Create new project from selected files by click or drag directory to this area.
             </p>
           </div>
         </a-row>

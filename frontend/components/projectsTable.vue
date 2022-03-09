@@ -18,10 +18,9 @@
           </a-popconfirm>
         </template>
       </a-table>
-      <a-button class="editable-add-btn">
-        Add
-      </a-button>
-      <media-tree-select style="margin-top: 24px;" />
+    </a-card>
+    <a-card style="margin-top: 24px;">
+      <media-tree-select />
     </a-card>
   </div>
 </template>
@@ -104,13 +103,29 @@ export default {
     })
   },
   methods: {
-    onCellChange (key, dataIndex, value) {
+    async onCellChange (key, dataIndex, value) {
       const dataSource = [...this.dataSource]
       const target = dataSource.find(item => item.key === key)
+
       if (target) {
-        target[dataIndex] = value
-        this.dataSource = dataSource
+        await fetch(`http://localhost:8000/projects/${target.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ name: value })
+        })
+          .then((response) => {
+            if (response.ok) {
+              target[dataIndex] = value
+              this.dataSource = dataSource
+              this.$message.success('Project name updated.')
+            } else {
+              this.$message.error('Project name update failed.')
+            }
+          })
+          .catch((e) => {
+            this.$message.error('Project name update failed.' + e)
+          })
       }
+      console.log(key, dataIndex, value)
     },
     async onDelete (id) {
       await fetch(`http://localhost:8000/projects/${id}`, { method: 'DELETE' })
@@ -165,8 +180,5 @@ export default {
 .editable-cell-icon:hover,
 .editable-cell-icon-check:hover {
   color: #108ee9;
-}
-
-.editable-add-btn {
 }
 </style>

@@ -18,14 +18,17 @@
 // eslint-disable-next-line no-unused-vars
 export default {
   name: 'ModelsTreeSelect',
+  props: {
+    inputFileName: { type: String }
+  },
   data () {
     return {
       isDisabled: true,
       isAnnotating: false,
-      inputFileName: 'result_wav.wav',
+      // inputFileName: 'result_wav.wav',
       modelName: null,
       treeData: [],
-      annotations: null
+      annotations: []
     }
   },
   async fetch () {
@@ -40,7 +43,8 @@ export default {
   methods: {
     async runModel () {
       this.isAnnotating = true
-      this.annotations = await fetch(`http://localhost:8000/annotate?input_file_name=${this.inputFileName}&model_dir_name=${this.modelName}`)
+      console.log(this.inputFileName, this.modelName)
+      this.annotations = await fetch(`http://localhost:8000/annotate?input_file_path=${this.inputFileName}&model_dir_name=${this.modelName}`)
         .then((res) => {
           this.isAnnotating = false
           return res.json()
@@ -48,7 +52,7 @@ export default {
         .catch(() => {
           this.isAnnotating = false
         })
-      this.$nuxt.$emit('update-annotations', this.annotations)
+      this.$nuxt.$emit('media-update-annotations', this.annotations)
     }
   }
 }
