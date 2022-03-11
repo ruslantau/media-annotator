@@ -1,6 +1,9 @@
 # media-annotator
 Web-based annotation tool for media data.
-Currently, only `.wav` files supported.
+
+Currently, only `.wav` `.mp3` files supported.
+
+For auto annotation will be used the first channel of `.mp3`.
 
 ![](./img/mediaView.png)
 
@@ -24,7 +27,3 @@ Run FastAPI backend
 Run Nuxt frontend and open http://localhost:3000/projects
 
     npm run build --prefix frontend && npm run start --prefix frontend
-    
-
-
-
