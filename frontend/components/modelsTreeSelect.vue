@@ -19,7 +19,7 @@
 export default {
   name: 'ModelsTreeSelect',
   props: {
-    inputFileName: { type: String }
+    inputFileName: { type: String, default: null }
   },
   data () {
     return {
@@ -43,16 +43,25 @@ export default {
   methods: {
     async runModel () {
       this.isAnnotating = true
-      console.log(this.inputFileName, this.modelName)
+      this.$message.info('Auto annotation running..')
+      this.$nuxt.$emit('media-is-ready', false)
       this.annotations = await fetch(`http://localhost:8000/annotate?input_file_path=${this.inputFileName}&model_dir_name=${this.modelName}`)
         .then((res) => {
           this.isAnnotating = false
+          this.$nuxt.$emit('media-is-ready', true)
+          this.$message.success('Auto annotation finished.')
           return res.json()
         })
-        .catch(() => {
+        .catch((e) => {
           this.isAnnotating = false
+          this.$nuxt.$emit('media-is-ready', true)
+          this.$message.error('Auto annotation failed.' + e)
         })
-      this.$nuxt.$emit('media-update-annotations', this.annotations)
+      if (this.annotations.length > 0) {
+        this.$nuxt.$emit('media-update-annotations', this.annotations)
+      } else {
+        this.$message.info("Can't find a speech.")
+      }
     }
   }
 }

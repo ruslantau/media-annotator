@@ -3,6 +3,13 @@
     <a-card title="Audio">
       <slot slot="extra" name="card-extra" />
       <client-only>
+        <div v-if="!isMediaReady" style="position: absolute; width: 100%; left: 0; height: 128px; background-color: rgba(0,0,0,0.7); z-index: 100;">
+          <a-row type="flex" justify="center" align="middle" style="height: 100%;">
+            <a-spin>
+              <a-icon slot="indicator" type="loading" style="font-size: 60px" spin />
+            </a-spin>
+          </a-row>
+        </div>
         <vue-wave-surfer ref="surf" :src="fileUrl" :options="options" />
         <a-row type="flex" justify="center" style="position: absolute; width: 100%; left:0; bottom: -15px;">
           <a-space size="small" style="position: absolute; left: 13px;">
@@ -17,15 +24,30 @@
                   :max="1"
                   :step="0.1"
                   :default-value="0.5"
+                  :disabled="!isMediaReady"
                   @afterChange="updateVolumes"
                 />
               </div>
-              <a-button shape="circle" icon="sound" />
+              <a-button :disabled="!isMediaReady" shape="circle" icon="sound" />
             </a-popover>
-            <a-button v-if="!isPlaying" icon="play-circle" type="primary" style="width: 100px;" @click="toggle_play">
+            <a-button
+              v-if="!isPlaying"
+              icon="play-circle"
+              type="primary"
+              style="width: 100px;"
+              :disabled="!isMediaReady"
+              @click="toggle_play"
+            >
               Play
             </a-button>
-            <a-button v-else icon="pause-circle" type="primary" style="width: 100px;" @click="toggle_play">
+            <a-button
+              v-else
+              icon="pause-circle"
+              type="primary"
+              style="width: 100px;"
+              :disabled="!isMediaReady"
+              @click="toggle_play"
+            >
               Pause
             </a-button>
             <a-popover>
@@ -36,10 +58,11 @@
                   :max="1000"
                   :step="10"
                   :default-value="zoom"
+                  :disabled="!isMediaReady"
                   @afterChange="updateZoom"
                 />
               </div>
-              <a-button shape="circle" icon="zoom-in" />
+              <a-button :disabled="!isMediaReady" shape="circle" icon="zoom-in" />
             </a-popover>
           </a-space>
           <a-space size="small" style="position: absolute; right: 13px;">
@@ -47,11 +70,12 @@
               icon="delete"
               :type="hovered ? 'danger' : 'default'"
               :loading="isSplitting"
+              :disabled="!isMediaReady"
               @mouseover="hovered = true"
               @mouseleave="hovered = false"
               @click="clearRegions"
             >
-              Delete all
+              Delete annotations
             </a-button>
             <a-dropdown>
               <a-menu slot="overlay" style="padding: 0;">
@@ -66,9 +90,9 @@
                 Export
               </a-button>
             </a-dropdown>
-            <a-button icon="scissor" :loading="isSplitting">
-              Split by regions
-            </a-button>
+            <!--<a-button icon="scissor" :disabled="!isMediaReady" :loading="isSplitting">-->
+            <!--  Split by regions-->
+            <!--</a-button>-->
             <!--            <a-button icon="edit">Edit</a-button>-->
           </a-space>
         </a-row>
@@ -122,6 +146,7 @@ export default {
       isPlaying: false,
       isExporting: false,
       isSplitting: false,
+      isMediaReady: false,
       zoom: 100,
       currentRegion: {
         id: null,
@@ -174,6 +199,7 @@ export default {
       this.currentRegion.duration = this.currentRegion.end - this.currentRegion.start
     },
     fileUrl () {
+      this.isMediaReady = false
       this.currentRegion = {
         id: null,
         start: null,
@@ -189,6 +215,8 @@ export default {
       this.$nextTick(function () {
         this.player.on('ready', () => {
           this.player.zoom(this.zoom)
+          this.isMediaReady = true
+          this.$nuxt.$emit('media-is-ready', true)
         })
         this.player.on('play', () => {
           this.isPlaying = true

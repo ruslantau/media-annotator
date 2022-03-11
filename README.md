@@ -23,7 +23,7 @@ Run FastAPI backend
 
 Run Nuxt frontend and open http://localhost:3000/projects
 
-    npm run dev --prefix frontend
+    npm run build --prefix frontend && npm run start --prefix frontend
     
 
 

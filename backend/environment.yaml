@@ -9,6 +9,8 @@ dependencies:
   - uvicorn
   - lxml
   - pandas
+  - pydub
+  - ffmpeg
   - pip:
     - cffi
     - pycparser

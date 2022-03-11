@@ -10,23 +10,31 @@
       <div slot="card-extra" style="position: absolute; left: 0; top:0; width: 100%; padding: 12px 0;">
         <a-row type="flex" justify="center" align="middle">
           <a-space>
-            <a-button :disabled="currentMediaId === 0" @click="previousMedia">
+            <a-button :disabled="currentMediaId === 0 || !isMediaReady" @click="previousMedia">
               <a-icon type="step-backward" />
               Previous
             </a-button>
-            <a-select v-model="currentMediaId" :default-value="0" style="max-width: 400px">
+            <a-select v-model="currentMediaId" :disabled="!isMediaReady" :default-value="0" style="max-width: 400px">
               <a-select-option v-for="(data, i) in projectData.data" :key="i" :value="i">
                 {{ data.file_url }}
               </a-select-option>
             </a-select>
-            <a-button :disabled="currentMediaId === projectData.data.length - 1" @click="nextMedia">
+            <a-button :disabled="currentMediaId === projectData.data.length - 1 || !isMediaReady" @click="nextMedia">
               Next
               <a-icon type="step-forward" />
             </a-button>
           </a-space>
-          <a-button style="position: absolute; right: 13px;" icon="save" :loading="isSynchRunned" :disabled="isSynchRunned" @click="saveAnnotations">
-            Synchronize all annotations
-          </a-button>
+          <div style="position: absolute; right: 13px;">
+            <span style="margin: 0 5px;"><a-icon type="clock-circle" /> {{ lastSyncTimeForHuman }}</span>
+            <a-button
+              icon="cloud-upload"
+              :loading="isSynchRunned"
+              :disabled="isSynchRunned || !isMediaReady"
+              @click="syncAnnotations"
+            >
+              Synchronize all
+            </a-button>
+          </div>
         </a-row>
       </div>
     </media-viewer>
@@ -43,7 +51,9 @@ export default {
       currentMediaId: 0,
       currentMediaURL: null,
       isSynchRunned: false,
-      lastSynchronized: null
+      isMediaReady: false,
+      lastSyncTime: new Date(),
+      lastSyncTimeForHuman: 0
     }
   },
   async fetch () {
@@ -52,6 +62,7 @@ export default {
   },
   watch: {
     currentMediaId (MediaId) {
+      this.isMediaReady = false
       this.currentMediaURL = `http://localhost:8000/uploads/${this.$router.currentRoute.params.id}/${this.projectData.data[MediaId].file_url}`
       this.$refs.mediaViewer.player.clearRegions()
       this.$refs.mediaViewer.player.empty()
@@ -62,7 +73,13 @@ export default {
       })
     }
   },
+  created () {
+    setInterval(this.getLastSyncTime, 1000)
+  },
   mounted () {
+    this.$nuxt.$on('media-is-ready', (ready) => {
+      this.isMediaReady = ready
+    })
     this.$nuxt.$on('media-clear-all-regions', (e) => {
       this.projectData.data[this.currentMediaId].annotations = []
     })
@@ -88,7 +105,7 @@ export default {
         const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.projectData.data))
         const downloadAnchorNode = document.createElement('a')
         downloadAnchorNode.setAttribute('href', dataStr)
-        downloadAnchorNode.setAttribute('download', 'annotations.json')
+        downloadAnchorNode.setAttribute('download', `${this.projectData.name}_annotations.json`)
         document.body.appendChild(downloadAnchorNode) // required for firefox
         downloadAnchorNode.click()
         downloadAnchorNode.remove()
@@ -102,17 +119,18 @@ export default {
     nextMedia () {
       this.currentMediaId = Math.min(this.currentMediaId + 1, this.projectData.data.length)
     },
-    async saveAnnotations () {
+    async syncAnnotations () {
       this.isSynchRunned = true
       await fetch(`http://localhost:8000/projects/${this.$router.currentRoute.params.id}/annotations`, {
         method: 'PUT',
         body: JSON.stringify(this.projectData.data)
       })
         .then(() => {
-          this.lastSynchronized = true
+          this.lastSyncTime = new Date()
+          this.$message.success('All synchronized now.')
         })
         .catch((e) => {
-          // this.lastSynchronized = false
+          this.$message.error('Sync was failed.' + e)
         })
         .finally(() => {
           this.isSynchRunned = false
@@ -125,6 +143,17 @@ export default {
         end: region.end,
         data: { text: region.data.text },
         color: [undefined, '', ' ', null].includes((region.data.text || '').trim()) ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 255, 0, 0.1)'
+      }
+    },
+    getLastSyncTime () {
+      const delta = ~~((new Date() - this.lastSyncTime) / 1000)
+      const minutes = ~~(delta / 60)
+
+      if (delta < 60) {
+        this.lastSyncTimeForHuman = 'Less than minute'
+      }
+      if (delta >= 60) {
+        this.lastSyncTimeForHuman = `Sync ${minutes}m ago`
       }
     }
   }

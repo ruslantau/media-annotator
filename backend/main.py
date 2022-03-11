@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from vosk import Model, KaldiRecognizer
 from utils import get_models_table, ProjectManager
+from pydub import AudioSegment
 
 BASE_DIR = Path(__file__).parent.absolute()
 DATA_DIR = BASE_DIR.parent / 'data'
@@ -103,13 +104,24 @@ async def annotate(input_file_path: str, model_dir_name: str):
     if not input_file_path.exists():
         raise HTTPException(status_code=404, detail="Input files not found.")
 
-    wf = wave.open(input_file_path.as_posix(), "rb")
+    if input_file_path.suffix != '.mp3':
+        sound = AudioSegment.from_mp3(input_file_path.as_posix())
+        wf, _ = sound.split_to_mono()
+        temp_input_file_path = input_file_path.with_suffix('.wav')
+        wf.export(temp_input_file_path.as_posix(), format="wav").close()
+        wf = wave.open(temp_input_file_path.as_posix(), "rb")
+    elif input_file_path.suffix != '.wav':
+        wf = wave.open(input_file_path.as_posix(), "rb")
+    else:
+        raise HTTPException(status_code=400, detail=f'Unsupported file extension "{input_file_path.suffix}".')
+
+    frame_rate = wf.getframerate()
     if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
         print("Audio file must be WAV format mono PCM.")
         exit(1)
 
     model = Model(model_dir_path.as_posix())
-    rec = KaldiRecognizer(model, wf.getframerate())
+    rec = KaldiRecognizer(model, frame_rate)
     rec.SetWords(True)
 
     while True:
@@ -117,6 +129,11 @@ async def annotate(input_file_path: str, model_dir_name: str):
         if len(data) == 0:
             break
         rec.AcceptWaveform(data)
+
+    try:
+        temp_input_file_path.unlink()
+    except Exception:
+        pass
 
     result_json = json.loads(rec.FinalResult())
 
