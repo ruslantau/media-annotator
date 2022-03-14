@@ -8,9 +8,8 @@ For auto annotation will be used the first channel of `.mp3`.
 ![](./img/mediaView.png)
 
 ## TODO
-- extend the list of supported formats (`mp3,mp4,flac,avi,etc.`)
-- feature to exporting annotations as `.csv`
-- feature to exporting audio regions as audio files as `archive.zip`
+- extend the list of supported formats (`mp4,flac,avi,etc.`)
+- running auto annotation on selected region
 
 ## Installation
 Clone repository, create python environment using conda manager and activate it
@@ -24,6 +23,9 @@ Run FastAPI backend
 
     python backend/main.py
 
-Run Nuxt frontend and open http://localhost:3000/projects
+Install dependencies and run Nuxt frontend and open http://localhost:3000/projects
 
-    npm run build --prefix frontend && npm run start --prefix frontend
+    cd frontend
+    npm install
+    npm run build 
+    npm run start

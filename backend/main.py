@@ -133,13 +133,13 @@ async def annotate(input_file_path: str, model_dir_name: str):
     if not input_file_path.exists():
         raise HTTPException(status_code=404, detail="Input files not found.")
 
-    if input_file_path.suffix != '.mp3':
+    if input_file_path.suffix == '.mp3':
         sound = AudioSegment.from_mp3(input_file_path.as_posix())
         wf, _ = sound.split_to_mono()
         temp_input_file_path = input_file_path.with_suffix('.wav')
         wf.export(temp_input_file_path.as_posix(), format="wav").close()
         wf = wave.open(temp_input_file_path.as_posix(), "rb")
-    elif input_file_path.suffix != '.wav':
+    elif input_file_path.suffix == '.wav':
         wf = wave.open(input_file_path.as_posix(), "rb")
     else:
         raise HTTPException(status_code=400, detail=f'Unsupported file extension "{input_file_path.suffix}".')
