@@ -20,8 +20,9 @@ BASE_DIR = Path(__file__).parent.absolute()
 DATA_DIR = BASE_DIR.parent / 'data'
 MODELS_DIR = DATA_DIR / "models"
 UPLOADS_DIR = DATA_DIR / "uploads"
+TEMP_DIR = DATA_DIR / "temp"
 
-for path in [UPLOADS_DIR, MODELS_DIR]:
+for path in [UPLOADS_DIR, MODELS_DIR, TEMP_DIR]:
     path.mkdir(exist_ok=True, parents=True)
 
 app = FastAPI()
@@ -62,13 +63,41 @@ async def projects(id: str = None) -> JSONResponse:
 
 
 @app.put("/projects/{id}")
-async def update_annotations(id: str, new_data: Request) -> JSONResponse:
+async def update_project(id: str, new_data: Request) -> JSONResponse:
     data_json = await new_data.json()
     project_manager.read()
     project = project_manager.projects_dict[id]
     project['name'] = data_json['name']
     project_manager.update_project(project)
     return JSONResponse(content='Data was updated.', status_code=200)
+
+
+@app.get("/projects/{id}/annotations", response_class=FileResponse)
+async def download_annotations(id: str) -> FileResponse:
+    project_manager.read()
+    project = project_manager.projects_dict[id]
+
+    annotations_zip_path = TEMP_DIR / 'audio_regions.zip'
+    temp_wav_path = TEMP_DIR / 'temp.wav'
+    with zipfile.ZipFile(annotations_zip_path, 'w') as zip_ref:
+        for media in project['data']:
+            media_path = Path(media['file_path'])
+            wav_path = Path(media['file_url'])
+            sound = AudioSegment.from_mp3(media_path)
+
+            if sound.channels > 1:
+                wf, _ = sound.split_to_mono()
+            else:
+                wf = sound
+
+            for region in media['annotations']:
+                start, end = round(region['start'], 2), round(region['end'], 2)
+                zip_wav_path = wav_path.with_name(f'{wav_path.stem}_region_{start:.2f}_{end:.2f}.wav')
+                sub_wf = wf[region['start'] * 1000:region['end'] * 1000]
+                sub_wf.export(TEMP_DIR / 'temp.wav').close()
+                zip_ref.write(temp_wav_path, zip_wav_path)
+    temp_wav_path.unlink()
+    return FileResponse(annotations_zip_path)
 
 
 @app.put("/projects/{id}/annotations")

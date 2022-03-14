@@ -77,23 +77,22 @@
             >
               Delete annotations
             </a-button>
-            <a-dropdown>
+            <a-dropdown :disabled="isExporting">
               <a-menu slot="overlay" style="padding: 0;">
                 <a-menu-item key="1" @click="downloadAnnotations('json')">
-                  As JSON
+                  <a-icon type="file-text" /> Annotations JSON
                 </a-menu-item>
-                <!-- <a-menu-item key="2" @click="downloadAnnotations('csv')">-->
-                <!--   As CSV-->
-                <!-- </a-menu-item>-->
+                <a-menu-item key="2" @click="downloadAnnotations('csv')">
+                  <a-icon type="file-text" /> Annotations CSV
+                </a-menu-item>
+                <a-menu-item key="3" @click="downloadRegionsZip">
+                  <a-icon type="file-zip" /> Audio regions as ZIP of .wav's
+                </a-menu-item>
               </a-menu>
               <a-button icon="upload" :loading="isExporting">
                 Export
               </a-button>
             </a-dropdown>
-            <!--<a-button icon="scissor" :disabled="!isMediaReady" :loading="isSplitting">-->
-            <!--  Split by regions-->
-            <!--</a-button>-->
-            <!--            <a-button icon="edit">Edit</a-button>-->
           </a-space>
         </a-row>
       </client-only>
@@ -279,6 +278,12 @@ export default {
     },
     downloadAnnotations (fileType) {
       this.$nuxt.$emit('download-all-annotations', fileType)
+    },
+    downloadRegionsZip () {
+      this.$message.info('Creating audio_regions.zip.. It may take a while.')
+      this.isExporting = true
+      // eslint-disable-next-line
+      const downloadWindow = window.open(`http://localhost:8000/projects/${this.$router.currentRoute.params.id}/annotations`, '_self')
     }
   }
 }

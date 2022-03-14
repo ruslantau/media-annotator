@@ -101,15 +101,29 @@ export default {
       this.projectData.data[this.currentMediaId].annotations[annotationID] = this.getRegion(newRegion)
     })
     this.$nuxt.$on('download-all-annotations', (fileType, e) => {
+      let dataStr = `data:text/${fileType};charset=utf-8,`
       if (fileType === 'json') {
-        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.projectData.data))
-        const downloadAnchorNode = document.createElement('a')
-        downloadAnchorNode.setAttribute('href', dataStr)
-        downloadAnchorNode.setAttribute('download', `${this.projectData.name}_annotations.json`)
-        document.body.appendChild(downloadAnchorNode) // required for firefox
-        downloadAnchorNode.click()
-        downloadAnchorNode.remove()
+        dataStr += encodeURIComponent(JSON.stringify(this.projectData.data))
       }
+      if (fileType === 'csv') {
+        let csvFile = ''
+        this.projectData.data.forEach((media) => {
+          let csvLine = ''
+          // eslint-disable-next-line
+          const [filePath, fileExt] = media.file_url.split('.')
+          media.annotations.forEach((region) => {
+            csvLine += `${filePath}_region_${region.start.toFixed(2)}_${region.end.toFixed(2)}.wav|${region.data.text}\r\n`
+          })
+          csvFile += csvLine
+        })
+        dataStr += csvFile
+      }
+      const downloadAnchorNode = document.createElement('a')
+      downloadAnchorNode.setAttribute('href', dataStr)
+      downloadAnchorNode.setAttribute('download', `${this.projectData.name}_annotations.${fileType}`)
+      document.body.appendChild(downloadAnchorNode) // required for firefox
+      downloadAnchorNode.click()
+      downloadAnchorNode.remove()
     })
   },
   methods: {

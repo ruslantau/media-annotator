@@ -17,7 +17,7 @@ Clone repository, create python environment using conda manager and activate it
 
     git clone https://github.com/ruslantau/media-annotator
     cd annotator
-    conda create -f backend/environment.yaml
+    conda env create -f backend/environment.yaml
     conda activate annotator
 
 Run FastAPI backend
