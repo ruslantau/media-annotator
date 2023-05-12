@@ -1,8 +1,8 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ruslantau/media-annotator/docker-image.yml?logo=docker&logoColor=white)
-![Backend size](https://img.shields.io/docker/image-size/ruslantau/media-annotator-backend/latest?label=backend)
-![Frontend size](https://img.shields.io/docker/image-size/ruslantau/media-annotator-frontend/latest?label=frontend)
-![GitHub](https://img.shields.io/github/license/ruslantau/media-annotator)
-![GitHub issues](https://img.shields.io/github/issues/ruslantau/media-annotator)
+![Backend size](https://img.shields.io/docker/image-size/ruslantau/media-annotator-backend/latest?label=backend&logo=flask)
+![Frontend size](https://img.shields.io/docker/image-size/ruslantau/media-annotator-frontend/latest?label=frontend&logo=nuxtdotjs&logoColor=white)
+![Project license](https://img.shields.io/github/license/ruslantau/media-annotator?logo=github)
+![GitHub issues](https://img.shields.io/github/issues/ruslantau/media-annotator?logo=github)
 
 # Media-annotator
 Web-based annotation tool for media data.
