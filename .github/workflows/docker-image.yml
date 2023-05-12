@@ -16,10 +16,10 @@ jobs:
       uses: actions/checkout@v3
       
     - name: Build image
-      run: docker build . --file backend/Dockerfile --tag media-annotator-frontend:latest
+      run: docker build . --file backend/Dockerfile --tag media-annotator-frontend
 
     - name: Push image
-      run: docker push ruslantau/media-annotator-frontend:latest
+      run: docker push ruslantau/media-annotator-frontend
 
 
   build-backend:
@@ -35,7 +35,7 @@ jobs:
       uses: actions/checkout@v3
       
     - name: Build image
-      run: docker build . --file backend/Dockerfile --tag media-annotator-backend:latest
+      run: docker build . --file backend/Dockerfile --tag media-annotator-backend
 
     - name: Push image
-      run: docker push ruslantau/media-annotator-backend:latest
+      run: docker push ruslantau/media-annotator-backend

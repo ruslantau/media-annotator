@@ -15,7 +15,7 @@ Web-based annotation tool for media data.
 1. Run app as docker image
    
     ```docker-compose up -d```
-2. [Open app page](localhost:3000/projects)
+2. [Open app page](http://localhost:3000/projects)
 
 <details>
   <summary>How to debug</summary>
@@ -45,11 +45,12 @@ Web-based annotation tool for media data.
     npm run build 
     npm run start
     ```
-5.  [Open app page](localhost:3000/projects)
+5.  [Open app page](http://localhost:3000/projects)
 </details>
 
 ## TODO
-- [] extend the list of supported formats (`mp4,flac,avi,etc.`)
-- [] running auto annotation on selected region
-- [] adding punctuation 
-- [] speaker diarisation 
+- [ ] add docker images and setup CI/CD
+- [ ] extend the list of supported formats (`mp4,flac,avi,etc.`)
+- [ ] running auto annotation on selected region
+- [ ] adding punctuation 
+- [ ] speaker diarisation 
