@@ -46,8 +46,9 @@ class ProjectManager:
 def convert_human_to_bytes(size: str):
     power = 2 ** 10
     power_labels = {'': 0, 'K': 1, 'M': 2, 'G': 3, 'T': 4}
-    number, label = size[:-1], size[-1]
-    return float(number) * power ** power_labels[label]
+    label_index = [c.isalpha() for c in size].index(True)
+    number, label = size[:label_index], size[label_index:]
+    return float(number) * power ** power_labels.get(label, 0)
 
 
 def get_models_table():
@@ -61,6 +62,6 @@ def get_models_table():
     temp = temp.explode('n_rows').reset_index(drop=True)
     table['Language'] = temp['Model']
     table = table[~table['Size'].isna()]
-    table['Size_bytes'] = table['Size'].map(convert_human_to_bytes).astype(int)
+    table['Size_bytes'] = table['Size'].map(convert_human_to_bytes).astype(float)
     table = table.sort_values(['Language', 'Size_bytes'])
     return table

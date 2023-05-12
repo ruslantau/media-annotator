@@ -1,2 +1,4 @@
+__pycache__
 .idea/
 data/*
+package-lock.json

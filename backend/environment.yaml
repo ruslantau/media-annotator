@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - fastapi
-  - python=3.7
+  - python=3.8
   - python-multipart
   - uvicorn
   - lxml
@@ -14,5 +14,5 @@ dependencies:
   - pip:
     - cffi
     - pycparser
-    - vosk==0.3.32
+    - vosk
 prefix: /Users/ruslantau/miniconda3/envs/annotator

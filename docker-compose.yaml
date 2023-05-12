@@ -1,0 +1,15 @@
+services:
+  media-annotator-frontend:
+    image: ruslantau/media-annotator-frontend
+    build:
+      dockerfile: ./frontend/Dockerfile
+      context: ./
+    ports:
+      - "3000:3000"
+  media-annotator-backend:
+    image: ruslantau/media-annotator-backend
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: ./
+    ports:
+      - "8000:8000"
