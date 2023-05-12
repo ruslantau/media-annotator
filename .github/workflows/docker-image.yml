@@ -19,7 +19,7 @@ jobs:
       run: docker build . --file backend/Dockerfile --tag media-annotator-frontend:latest
 
     - name: Push image
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/media-annotator-frontend:latest
+      run: docker push ruslantau/media-annotator-frontend:latest
 
 
   build-backend:
@@ -38,4 +38,4 @@ jobs:
       run: docker build . --file backend/Dockerfile --tag media-annotator-backend:latest
 
     - name: Push image
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/media-annotator-backend:latest
+      run: docker push ruslantau/media-annotator-backend:latest
