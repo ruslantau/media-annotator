@@ -18,7 +18,7 @@ jobs:
     - name: Build and push image
       uses: docker/build-push-action@v4
       with:
-        context: ./frontend
+        context: .
         tags: ruslantau/media-annotator-frontend:latest
         push: ${{ github.event_name != 'pull_request' }}
 
@@ -37,6 +37,6 @@ jobs:
     - name: Build and push image
       uses: docker/build-push-action@v4
       with:
-        context: ./backend
+        context: .
         push: ${{ github.event_name != 'pull_request' }}
         tags: ruslantau/media-annotator-backend:latest
