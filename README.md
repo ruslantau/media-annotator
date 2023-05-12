@@ -1,24 +1,24 @@
-# media-annotator
-Web-based annotation tool for media data.
-
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ruslantau/media-annotator/docker-image.yml)
+# Media-annotator
+Web-based annotation tool for media data.
 
 ![](./img/mediaView.png)
 
 # Features
 - Uploading selected audio-files from directory. Currently, only `.wav` `.mp3` files are supported. 
-- Manual and auto transcribing for 20+ languages and dialects via [Vosk](https://alphacephei.com/vosk) **Note**: Auto annotation will use the first channel of `.mp3`.
+- Manual and auto transcribing for 20+ languages and dialects via [Vosk](https://alphacephei.com/vosk) 
+  > ℹ️ Auto annotation will use the first channel of `.mp3`.
 - Export of the speech regions as `zip` of `wavs` and `regions.csv` or `regions.json`
 
-## How to use
+# How to use
     
 1. Run app as docker image
    
     ```docker-compose up -d```
 2. [Open app page](http://localhost:3000/projects)
 
-<details>
-  <summary>How to debug</summary>
+
+# How to debug
 
 1. Install [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html#)/[miniconda](https://docs.conda.io/en/latest/miniconda.html)/[micromamba](https://mamba.readthedocs.io/en/latest/installation.html#micromamba) and [node+npm](https://nodejs.org/en/download)
 
@@ -46,10 +46,9 @@ Web-based annotation tool for media data.
     npm run start
     ```
 5.  [Open app page](http://localhost:3000/projects)
-</details>
 
-## TODO
-- [ ] add docker images and setup CI/CD
+# TODO
+- [x] add docker images and setup CI/CD
 - [ ] extend the list of supported formats (`mp4,flac,avi,etc.`)
 - [ ] running auto annotation on selected region
 - [ ] adding punctuation 
